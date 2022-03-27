@@ -1,5 +1,5 @@
-//#ifndef _FUNCTION_H_
-//#define _FUNCTION_H_
+#ifndef _FUNCTION_H_
+#define _FUNCTION_H_
 #include "13453.h"
 #include <stdlib.h>
 //#include "function.h"
@@ -300,4 +300,4 @@ void deleteStage(){
     delete[] baseStack;
     baseQueue.~BaseQueue();
 }
-//#endif // _FUNCTION_H_
+#endif // _FUNCTION_H_
