@@ -29,6 +29,9 @@ int main()
 
     for (int i=0; i<M; i++){
         cin >> command;
+        if(!baseQueue.empty()){
+            cout<<"Bullets: "<<baseQueue.front()<<endl;
+        }
         if(command == "SHOOT"){
             cin >> col;
             ShootNormal(col, W);
@@ -40,6 +43,7 @@ int main()
         else if(command == "FRONT_ROW"){
             FrontRow(W);
         }
+
     }
 
     ShowResult(W);

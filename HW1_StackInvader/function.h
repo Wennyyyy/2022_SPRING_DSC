@@ -1,5 +1,5 @@
-#ifndef _FUNCTION_H_
-#define _FUNCTION_H_
+//#ifndef _FUNCTION_H_
+//#define _FUNCTION_H_
 #include "13453.h"
 #include <stdlib.h>
 //#include "function.h"
@@ -7,7 +7,7 @@
 using namespace std;
 
 template < class T >
-BaseStack<T>::BaseStack():_top(-1),_capacity(1){
+BaseStack<T>::BaseStack():_top(-1),_capacity(20){
     this->_stack = new T[this->_capacity];
 }
 // Destructor
@@ -59,7 +59,7 @@ void BaseStack<T>::pop(){
 }
 
 template < class T >
-BaseQueue<T>::BaseQueue():_capacity(2),_front(0),_rear(0){
+BaseQueue<T>::BaseQueue():_front(0),_rear(0),_capacity(2){
     _queue = new T[this->_capacity];
 }
 // Destructor
@@ -120,7 +120,7 @@ BaseStack<int>* baseStack;
 void InitialzeStage(int W, int H){
     if(W > 0) baseStack = new BaseStack<int>[W];
     else ;
-    if(H>0){
+    if(H> 0){
         while(H--){
             for(int j=0;j<W;j++){
                 int x;
@@ -150,7 +150,7 @@ void ShootNormal(int col, int W){
             baseStack[col].pop();
         }
         //enemy#5 generate new enemy
-        else if(baseStack[col].top() == 5 ){
+    else if(baseStack[col].top() == 5 ){
             baseStack[col].pop();
             int h[W],L,R,H = 1,p=3;
             //生成敵人左右界線
@@ -160,7 +160,8 @@ void ShootNormal(int col, int W){
             else R = W-1;
             //找生成敵人位置 H
             for(int i=L; i <= R; i++){
-                h[i] = baseStack[i].size();
+                if (i == col) h[i] = baseStack[i].size()+1;
+                else h[i] = baseStack[i].size();
                 H = max(h[i],H);
             }
             for(int i = L; i <= R; i++){
@@ -244,28 +245,40 @@ void ShootSpecial(int col, int W){
 // print the enemy types at that level for each column.
 // print a underline "_" for a column that does not have a enemy at that level.
 void FrontRow(int W){
-    int H = 0,h[W]={0};
+    int H = 0,h[W]={0},cnt[W];
     for(int i=0; i < W; i++){
-        h[i] = baseStack[i].size();
+        while(!baseStack[i].empty()){
+            if(baseStack[i].top() == 0){
+                baseStack[i].pop();
+            }
+            else break;
+        }
+        if(!baseStack[i].empty()){
+            h[i] = baseStack[i].size();
+        }
+        else h[i] = 0;
         H = max(h[i],H);
     }
-    cout<<"FRONT_ROW, LEVEL:"<<H<<endl;
-    for(int j= 0;j<W;j++){
-        if((h[j])==H){
-            if(baseStack[j].top() == 0) cout<<"_";
-            else cout<<baseStack[j].top(); //ASCII 48 = '0'
+    if(H>0){
+        cout<<"FRONT_ROW, LEVEL:"<<H<<endl;
+        for(int j= 0;j<W;j++){
+            if((h[j])==H){
+                if(baseStack[j].top() == 0) cout<<"_";
+                else cout<<baseStack[j].top()<<""; //ASCII 48 = '0'
+            }
+            else cout<<"_";
+            if((j+1) != W ) cout<<" ";
         }
-        else cout<<"_";
-        if(j+1 != W) cout<<" ";
+        cout<<endl;
     }
-    cout<<endl;
+    else{ }
 }
 
 // Print the end result of the stage.
 void ShowResult(int W){
     cout<<"END_RESULT:"<<endl;
     int H = 0,h[W]={0},cnt[W]={0};
-    for(int i=0; i < W; i++){
+    /*for(int i=0; i < W; i++){
         h[i] = baseStack[i].size();
         for(int j=0;j<h[i];j++){
             if(baseStack[i].top() == 0){
@@ -274,13 +287,29 @@ void ShowResult(int W){
             }
         }
         H = max(h[i]-cnt[i],H);
+    }*/
+    for(int i=0; i < W; i++){
+        while(!baseStack[i].empty()){
+            if(baseStack[i].top() == 0){
+                baseStack[i].pop();
+            }
+            else break;
+        }
+        if(!baseStack[i].empty()){
+            h[i] = baseStack[i].size();
+        }
+        else h[i] = 0;
+        H = max(h[i],H);
     }
     char x[H][W] = {0};
     for(int i=H-1;i>=0;i--){
         for(int j= 0;j<W;j++){
             if((h[j])==i+1){
                 if(baseStack[j].top() == 0) x[i][j] = '_';
-                else x[i][j] = baseStack[j].top()+48; //ASCII 48 = '0'
+                else if(baseStack[j].top() >0 && baseStack[j].top() < 6){
+                    x[i][j] = baseStack[j].top()+48; //ASCII 48 = '0'
+                }
+                else x[i][j] = '_';
                 baseStack[j].pop();
                 h[j]--;
             }
@@ -289,7 +318,8 @@ void ShowResult(int W){
     }
     for(int i=0;i<H;i++){
         for(int j=0; j<W; j++){
-            cout<<x[i][j]<<" ";
+            cout<<x[i][j];
+            if((j+1) != W) cout<<" ";
         }
         cout<<endl;
     }
@@ -297,7 +327,8 @@ void ShowResult(int W){
 
 // free the memory that allocated in the program.
 void deleteStage(){
+    //delete[] baseStack;
     delete[] baseStack;
     baseQueue.~BaseQueue();
 }
-#endif // _FUNCTION_H_
+//#endif // _FUNCTION_H_
