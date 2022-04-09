@@ -10,7 +10,6 @@ class Node
 {
 public:
     friend class LinkedList<T>;
-    //使類別A可以存取類別B放在private區域的類別成員
 
     // constructor
     Node(T x,T y,T fence);
