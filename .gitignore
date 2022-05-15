@@ -1,4 +1,7 @@
-#VS Code
+# Test case
+*.tmp
+
+# VS Code
 .vscode/*
 
 # CodeBlocks
