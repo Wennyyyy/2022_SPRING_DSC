@@ -97,7 +97,6 @@ int main(int argc, char **argv) {
     Graph_SP *graph_SP;
     cin >> N;
 
-
     // Initial
     tourism = new Tourism[N];
     time = new u_64 *[N];
@@ -664,11 +663,10 @@ stack<string> Graph_SP::limited_path_time(string place_name, int limit) {
         if (place_name == this->tourism[i].Name) {
             int times = limit - 1;
             int pos = i;
-            if(times >= N) {
+            if (times >= N) {
                 times = N - 1;
             }
             if (this->optimal_time_chart[times][pos].pre_position != -1) {
-
                 while (this->optimal_time_chart[times][pos].pre_position != -1) {
                     final_path.push(this->tourism[pos].Name);
                     pos = this->optimal_time_chart[times][pos].pre_position;
@@ -690,11 +688,10 @@ stack<string> Graph_SP::limited_path_flow(string place_name, int limit) {
         if (place_name == this->tourism[i].Name) {
             int times = limit - 1;
             int pos = i;
-            if(times >= N) {
+            if (times >= N) {
                 times = N - 1;
             }
             if (this->optimal_flow_chart[times][pos].pre_position != -1) {
-
                 while (this->optimal_flow_chart[times][pos].pre_position != -1) {
                     final_path.push(this->tourism[pos].Name);
                     pos = this->optimal_flow_chart[times][pos].pre_position;
