@@ -71,6 +71,7 @@ private:
     void build_optimal_flow_chart();
 public:
     Graph_SP(int N, Tourism *tourism, int **time, double **flow);
+    ~Graph_SP();
     bool set_origin(string place_name);
     bool mark_state(string place_name, bool status);
     stack<string> limited_path_time(string place_name, int limit);
@@ -134,7 +135,7 @@ int main(int argc, char** argv){
         for(int i = 0; i < N; ++i){
             cout << setw(4) << i << "|";
             cout << "("
-                << setw(2) << graph_SP->tourism[i].Index << "," 
+                << setw(2) << graph_SP->tourism[i].Index << ","
                 << setw(5) << graph_SP->tourism[i].Name << ","
                 << setw(2) << graph_SP->tourism[i].PS      << ","
                 << setw(2) << graph_SP->tourism[i].State  << ""
@@ -206,12 +207,23 @@ int main(int argc, char** argv){
             if(command[2] == "TIME"){
                 optimal_path = graph_SP->optimal_path_time(command[1]);
                 if(!optimal_path.empty()){
-                    cout<<"Optimal TIME : ";
-                    cout << optimal_path.top();
+                    string first = optimal_path.top();
+                    int len = first.length();
                     optimal_path.pop();
                     while(!optimal_path.empty()){
-                        cout << " -> " << optimal_path.top();
-                        optimal_path.pop();
+                        string next = optimal_path.top();
+                        //equal (A -> A)
+                        if( !first.compare(next) ){
+                            cout << "No such optimal path to " << command[1];
+                            break;
+                        }else{
+                            if( len ){
+                                cout<<"Optimal TIME : " << first;
+                                len = 0;
+                            }
+                            cout << " -> " << next;
+                            optimal_path.pop();
+                        }
                     }
                     cout<<endl;
                 }else{
@@ -252,9 +264,17 @@ int main(int argc, char** argv){
 
             }else{
                 optimal_path = graph_SP->limited_path_flow(command[1], stoi(command[3]));
+                // string first = optimal_path.top();
+                // int len = first.length();
+                // optimal_path.pop();
                 if(!optimal_path.empty()){
                     cout<<"Limited FLOW : ";
-                    cout << optimal_path.top();
+                    // if( len ){
+                    //     cout << first;
+                    //     len = 0;
+                    // }else{
+                        cout << optimal_path.top();
+                    // }
                     optimal_path.pop();
                     while(!optimal_path.empty()){
                         cout << " -> " << optimal_path.top();
@@ -266,7 +286,7 @@ int main(int argc, char** argv){
                 }
             }
         }
-        
+
 #ifdef _WYNNE_DEBUG_
         cout << "INT_MAX:" << INT_MAX << endl;
         cout << "graph_SP -> optimal_time" << endl;
@@ -284,7 +304,7 @@ int main(int argc, char** argv){
             cout << setw(4) << i << "|";
             for(int j = 0; j < N; ++j){
                 cout << "("
-                     << setw(2) << graph_SP->optimal_time_chart[i][j].pre_position << "," 
+                     << setw(2) << graph_SP->optimal_time_chart[i][j].pre_position << ","
                      << setw(5) << graph_SP->optimal_time_chart[i][j].optimal_time << ","
                      << setw(2) << graph_SP->optimal_time_chart[i][j].total_PS     << ","
                      << setw(2) << graph_SP->optimal_time_chart[i][j].second_index
@@ -293,7 +313,7 @@ int main(int argc, char** argv){
             cout << endl;
         }
 
-        
+
         cout << "DBL_MAX:" << DBL_MAX << endl;
         cout << "graph_SP -> optimal_flow_chart" << endl;
         cout << "(pre_position, optimal_flow, total_PS, second_index)"  << endl;
@@ -310,7 +330,7 @@ int main(int argc, char** argv){
             cout << setw(4) << i << "|";
             for(int j = 0; j < N; ++j){
                 cout << "("
-                     << setw(2)                    << graph_SP->optimal_flow_chart[i][j].pre_position     << "," 
+                     << setw(2)                    << graph_SP->optimal_flow_chart[i][j].pre_position     << ","
                      << setw(9) << setprecision(2) << graph_SP->optimal_flow_chart[i][j].optimal_flow << ","
                      << setw(2)                    << graph_SP->optimal_flow_chart[i][j].total_PS         << ","
                      << setw(2)                    << graph_SP->optimal_flow_chart[i][j].second_index
@@ -329,7 +349,7 @@ int main(int argc, char** argv){
         cout << endl;
 #endif // _WYNNE_DEBUG_
     }
-    
+
     cout << "Stop receiving instructions" <<endl;
     return 0;
 }
@@ -363,9 +383,23 @@ Graph_SP::Graph_SP(int N, Tourism *tourism, int **time, double **flow)
     this->optimal_flow_chart = new flow_chart_type*[N+1];
 
     for(int i = 0; i <= N; ++i){
-        this->optimal_time_chart[i]     = new time_chart_type[N];
+        this->optimal_time_chart[i] = new time_chart_type[N];
         this->optimal_flow_chart[i] = new flow_chart_type[N];
     }
+}
+
+// -----------------------------------------------
+// Graph_SP Destructor
+// -----------------------------------------------
+// Description:
+//     delete data
+// -----------------------------------------------
+Graph_SP::~Graph_SP(){
+    delete this->tourism;
+    delete this->time;
+    delete this->optimal_flow_chart;
+    delete this->optimal_time_chart;
+    delete this->flow;
 }
 
 // -----------------------------------------------
@@ -429,7 +463,7 @@ void Graph_SP::build_optimal_time_chart(){
                             int new_PS   = this->optimal_time_chart[i-1][k].total_PS + this->tourism[j].PS;
 
                             if(new_time < this->optimal_time_chart[i][j].optimal_time){
-                                this->optimal_time_chart[i][j].pre_position  = k;
+                                this->optimal_time_chart[i][j].pre_position = k;
                                 this->optimal_time_chart[i][j].optimal_time = new_time;
                             }else if(new_time == this->optimal_time_chart[i][j].optimal_time){
                                 if(new_PS > this->optimal_time_chart[i][j].total_PS){
@@ -439,7 +473,7 @@ void Graph_SP::build_optimal_time_chart(){
                                     this->optimal_time_chart[i][j].pre_position  = k;
                                     this->optimal_time_chart[i][j].second_index  = this->optimal_time_chart[i-1][k].second_index;
                                 }
-                            }      
+                            }
                         }
                     }
                 }
@@ -503,7 +537,7 @@ void Graph_SP::build_optimal_flow_chart(){
                                     this->optimal_flow_chart[i][j].pre_position  = k;
                                     this->optimal_flow_chart[i][j].second_index  = this->optimal_flow_chart[i-1][k].second_index;
                                 }
-                            }      
+                            }
                         }
                     }
                 }
@@ -561,11 +595,12 @@ void Graph_SP::update_chart(){
 // Graph_SP::optimal_path
 // -----------------------------------------------
 // Description:
-//     Return optimal path 
+//     Return optimal path
 // -----------------------------------------------
 stack<string> Graph_SP::optimal_path_time(string place_name){
     stack<string> final_path;
     for(int i = 0; i < this->N; i++){
+        // find the destination and check if it is open.
         if(place_name == tourism[i].Name && tourism[i].State == 1){
             int pos = i;
             int times = N;
@@ -576,7 +611,6 @@ stack<string> Graph_SP::optimal_path_time(string place_name){
                     break;
                 }
             }
-            
             while(times > 0){
                 final_path.push(tourism[pos].Name);
                 pos = optimal_time_chart[times][pos].pre_position;
@@ -588,6 +622,7 @@ stack<string> Graph_SP::optimal_path_time(string place_name){
     }
     return final_path;
 }
+
 stack<string> Graph_SP::optimal_path_flow(string place_name){
     stack<string> final_path;
     for(int i = 0; i < this->N; i++){
@@ -601,7 +636,7 @@ stack<string> Graph_SP::optimal_path_flow(string place_name){
                     break;
                 }
             }
-            
+
             while(times > 0){
                 final_path.push(tourism[pos].Name);
                 pos = optimal_flow_chart[times][pos].pre_position;
@@ -618,7 +653,7 @@ stack<string> Graph_SP::optimal_path_flow(string place_name){
 // Graph_SP::limited_path
 // -----------------------------------------------
 // Description:
-//     Return limited path 
+//     Return limited path
 // -----------------------------------------------
 stack<string> Graph_SP::limited_path_time(string place_name, int limit){
     stack<string> final_path;
@@ -633,7 +668,6 @@ stack<string> Graph_SP::limited_path_time(string place_name, int limit){
                     break;
                 }
             }
-            
             while(times > 0){
                 final_path.push(tourism[pos].Name);
                 pos = optimal_time_chart[times][pos].pre_position;
@@ -658,7 +692,7 @@ stack<string> Graph_SP::limited_path_flow(string place_name, int limit){
                     break;
                 }
             }
-            
+
             while(times > 0){
                 final_path.push(tourism[pos].Name);
                 pos = optimal_flow_chart[times][pos].pre_position;
