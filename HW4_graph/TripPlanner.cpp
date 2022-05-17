@@ -350,14 +350,13 @@ int main(int argc, char **argv) {
         cout << endl;
 #endif  // _WYNNE_DEBUG_
     }
-    // Can not delete a class with string member on OJ
-    // delete tourism;
+    delete [] tourism;
     for (int i = 0; i < N; ++i) {
-        delete time[i];
-        delete flow[i];
+        delete [] time[i];
+        delete [] flow[i];
     }
-    delete time;
-    delete flow;
+    delete [] time;
+    delete [] flow;
     delete graph_SP;
 
     cout << "Stop receiving instructions" << endl;
@@ -406,11 +405,11 @@ Graph_SP::Graph_SP(int N, Tourism *tourism, int **time, double **flow)
 // -----------------------------------------------
 Graph_SP::~Graph_SP() {
     for (int i = 0; i <= N; ++i) {
-        delete this->optimal_flow_chart[i];
-        delete this->optimal_time_chart[i];
+        delete [] this->optimal_flow_chart[i];
+        delete [] this->optimal_time_chart[i];
     }
-    delete this->optimal_flow_chart;
-    delete this->optimal_time_chart;
+    delete [] this->optimal_flow_chart;
+    delete [] this->optimal_time_chart;
 }
 
 // -----------------------------------------------
