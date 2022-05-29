@@ -19,9 +19,8 @@ using namespace std;
 // TODO: Implement the sorting algorithm
 template < class T >
 void mySort(T arr[], int l, int r){
-    int temp;
     if( l < r ){
-        int pivot = arr[l];
+        T pivot = arr[l];
         int left = l;
         int right = r + 1;
         while(1){
@@ -31,10 +30,12 @@ void mySort(T arr[], int l, int r){
             if( left >= right ){
                 break;
             }
-            swap(arr[left], arr[r]);
-            mySort(arr , l, right - 1);
-            mySort(arr, right + 1, r);
+            swap(arr[left], arr[right]);
         }
+        swap(arr[l], arr[right]);
+
+        mySort(arr , l, right - 1);
+        mySort(arr, right + 1, r);
     }
 }
 
