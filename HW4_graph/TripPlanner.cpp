@@ -23,6 +23,7 @@
 #include <vector>
 using namespace std;
 
+typedef unsigned long long int u_64;
 // -----------------------------------------------
 // Variable and Function Declare
 // -----------------------------------------------
@@ -43,9 +44,8 @@ class Graph_SP {
     class time_chart_type {
        public:
         int pre_position = -1;
-        int optimal_time = INT_MAX;
+        u_64 optimal_time = INT_MAX;
         int total_PS = 0;
-        int second_index = 0;
     };
 
     class flow_chart_type {
@@ -53,11 +53,10 @@ class Graph_SP {
         int pre_position = -1;
         double optimal_flow = DBL_MAX;
         int total_PS = 0;
-        int second_index = 0;
     };
     int N;
     Tourism *tourism;
-    int **time;
+    u_64 **time;
     double **flow;
 
     // <previous position, optimal time>
@@ -70,16 +69,16 @@ class Graph_SP {
 
     void build_optimal_time_chart();
     void build_optimal_flow_chart();
+    stack<int> limited_path_time(int pos, int limit);
+    stack<int> limited_path_flow(int pos, int limit);
 
    public:
-    Graph_SP(int N, Tourism *tourism, int **time, double **flow);
+    Graph_SP(int N, Tourism *tourism, u_64 **time, double **flow);
     ~Graph_SP();
     bool set_origin(string place_name);
     bool mark_state(string place_name, bool status);
     stack<string> limited_path_time(string place_name, int limit);
     stack<string> limited_path_flow(string place_name, int limit);
-    stack<string> optimal_path_time(string place_name);
-    stack<string> optimal_path_flow(string place_name);
     void update_chart();
 };
 
@@ -90,21 +89,20 @@ vector<string> divide_str(string s);
 int main(int argc, char **argv) {
     int N;
     Tourism *tourism;
-    int **time;
+    u_64 **time;
     double **flow;
     int start_pos;
     string line, place_name, status;
     vector<string> command;
     Graph_SP *graph_SP;
-
     cin >> N;
 
     // Initial
     tourism = new Tourism[N];
-    time = new int *[N];
+    time = new u_64 *[N];
     flow = new double *[N];
     for (int i = 0; i < N; ++i) {
-        time[i] = new int[N];
+        time[i] = new u_64[N];
         flow[i] = new double[N];
     }
 
@@ -207,25 +205,14 @@ int main(int argc, char **argv) {
         } else if (command[0] == "OPTIMAL_PATH") {
             stack<string> optimal_path;
             if (command[2] == "TIME") {
-                optimal_path = graph_SP->optimal_path_time(command[1]);
+                optimal_path = graph_SP->limited_path_time(command[1], N);
                 if (!optimal_path.empty()) {
-                    string first = optimal_path.top();
-                    int len = first.length();
+                    cout << "Optimal TIME : ";
+                    cout << optimal_path.top();
                     optimal_path.pop();
                     while (!optimal_path.empty()) {
-                        string next = optimal_path.top();
-                        // equal (A -> A)
-                        if (!first.compare(next)) {
-                            cout << "No such optimal path to " << command[1];
-                            break;
-                        } else {
-                            if (len) {
-                                cout << "Optimal TIME : " << first;
-                                len = 0;
-                            }
-                            cout << " -> " << next;
-                            optimal_path.pop();
-                        }
+                        cout << " -> " << optimal_path.top();
+                        optimal_path.pop();
                     }
                     cout << endl;
                 } else {
@@ -233,7 +220,7 @@ int main(int argc, char **argv) {
                 }
 
             } else {
-                optimal_path = graph_SP->optimal_path_flow(command[1]);
+                optimal_path = graph_SP->limited_path_flow(command[1], N);
                 if (!optimal_path.empty()) {
                     cout << "Optimal FLOW : ";
                     cout << optimal_path.top();
@@ -261,22 +248,13 @@ int main(int argc, char **argv) {
                     }
                     cout << endl;
                 } else {
-                    cout << "No such optimal path to " << command[1] << endl;
+                    cout << "No such limited path to " << command[1] << endl;
                 }
-
             } else {
                 optimal_path = graph_SP->limited_path_flow(command[1], stoi(command[3]));
-                // string first = optimal_path.top();
-                // int len = first.length();
-                // optimal_path.pop();
                 if (!optimal_path.empty()) {
                     cout << "Limited FLOW : ";
-                    // if( len ){
-                    //     cout << first;
-                    //     len = 0;
-                    // }else{
                     cout << optimal_path.top();
-                    // }
                     optimal_path.pop();
                     while (!optimal_path.empty()) {
                         cout << " -> " << optimal_path.top();
@@ -284,7 +262,7 @@ int main(int argc, char **argv) {
                     }
                     cout << endl;
                 } else {
-                    cout << "No such optimal path to " << command[1] << endl;
+                    cout << "No such limited path to " << command[1] << endl;
                 }
             }
         }
@@ -295,21 +273,20 @@ int main(int argc, char **argv) {
         cout << "(pre_position, optimal_time, total_PS, second_index)" << endl;
         cout << "    |";
         for (int i = 0; i < N; ++i) {
-            cout << setw(16) << i << "|";
+            cout << setw(13) << i << "|";
         }
         cout << endl;
-        for (int i = 0; i < (17 * (N) + 5); ++i) {
+        for (int i = 0; i < (14 * (N) + 5); ++i) {
             cout << "-";
         }
         cout << endl;
-        for (int i = 1; i < N; ++i) {
+        for (int i = 0; i < N; ++i) {
             cout << setw(4) << i << "|";
             for (int j = 0; j < N; ++j) {
                 cout << "("
                      << setw(2) << graph_SP->optimal_time_chart[i][j].pre_position << ","
                      << setw(5) << graph_SP->optimal_time_chart[i][j].optimal_time << ","
-                     << setw(2) << graph_SP->optimal_time_chart[i][j].total_PS << ","
-                     << setw(2) << graph_SP->optimal_time_chart[i][j].second_index
+                     << setw(2) << graph_SP->optimal_time_chart[i][j].total_PS
                      << ")|";
             }
             cout << endl;
@@ -320,21 +297,20 @@ int main(int argc, char **argv) {
         cout << "(pre_position, optimal_flow, total_PS, second_index)" << endl;
         cout << "    |";
         for (int i = 0; i < N; ++i) {
-            cout << setw(20) << i << "|";
+            cout << setw(17) << i << "|";
         }
         cout << endl;
-        for (int i = 0; i < (21 * (N) + 5); ++i) {
+        for (int i = 0; i < (18 * (N) + 5); ++i) {
             cout << "-";
         }
         cout << endl;
-        for (int i = 1; i < N; ++i) {
+        for (int i = 0; i < N; ++i) {
             cout << setw(4) << i << "|";
             for (int j = 0; j < N; ++j) {
                 cout << "("
                      << setw(2) << graph_SP->optimal_flow_chart[i][j].pre_position << ","
                      << setw(9) << setprecision(2) << graph_SP->optimal_flow_chart[i][j].optimal_flow << ","
-                     << setw(2) << graph_SP->optimal_flow_chart[i][j].total_PS << ","
-                     << setw(2) << graph_SP->optimal_flow_chart[i][j].second_index
+                     << setw(2) << graph_SP->optimal_flow_chart[i][j].total_PS
                      << ")|";
             }
             cout << endl;
@@ -350,6 +326,14 @@ int main(int argc, char **argv) {
         cout << endl;
 #endif  // _WYNNE_DEBUG_
     }
+    delete[] tourism;
+    for (int i = 0; i < N; ++i) {
+        delete[] time[i];
+        delete[] flow[i];
+    }
+    delete[] time;
+    delete[] flow;
+    delete graph_SP;
 
     cout << "Stop receiving instructions" << endl;
     return 0;
@@ -378,14 +362,26 @@ vector<string> divide_str(string s) {
 // Description:
 //     Initial data
 // -----------------------------------------------
-Graph_SP::Graph_SP(int N, Tourism *tourism, int **time, double **flow)
+Graph_SP::Graph_SP(int N, Tourism *tourism, u_64 **time, double **flow)
     : N(N), tourism(tourism), time(time), flow(flow), start_pos(-1) {
-    this->optimal_time_chart = new time_chart_type *[N + 1];
-    this->optimal_flow_chart = new flow_chart_type *[N + 1];
+    this->optimal_time_chart = new time_chart_type *[N];
+    this->optimal_flow_chart = new flow_chart_type *[N];
 
-    for (int i = 0; i <= N; ++i) {
+    for (int i = 0; i < N; ++i) {
         this->optimal_time_chart[i] = new time_chart_type[N];
         this->optimal_flow_chart[i] = new flow_chart_type[N];
+    }
+
+    for (int i = 0; i < this->N; ++i) {
+        this->optimal_time_chart[0][i].pre_position = -1;
+        this->optimal_time_chart[0][i].optimal_time = 0;
+        this->optimal_time_chart[0][i].total_PS = 0;
+    }
+
+    for (int i = 0; i < this->N; ++i) {
+        this->optimal_flow_chart[0][i].pre_position = -1;
+        this->optimal_flow_chart[0][i].optimal_flow = 0;
+        this->optimal_flow_chart[0][i].total_PS = 0;
     }
 }
 
@@ -396,17 +392,12 @@ Graph_SP::Graph_SP(int N, Tourism *tourism, int **time, double **flow)
 //     delete data
 // -----------------------------------------------
 Graph_SP::~Graph_SP() {
-    delete this->tourism;
     for (int i = 0; i < N; ++i) {
-        delete this->time[i];
-        delete this->flow[i];
-        delete this->optimal_flow_chart[i];
-        delete this->optimal_time_chart[i];
+        delete[] this->optimal_flow_chart[i];
+        delete[] this->optimal_time_chart[i];
     }
-    delete this->time;
-    delete this->flow;
-    delete this->optimal_flow_chart;
-    delete this->optimal_time_chart;
+    delete[] this->optimal_flow_chart;
+    delete[] this->optimal_time_chart;
 }
 
 // -----------------------------------------------
@@ -439,58 +430,91 @@ bool Graph_SP::set_origin(string place_name) {
 // -----------------------------------------------
 void Graph_SP::build_optimal_time_chart() {
     for (int i = 0; i < this->N; ++i) {
-        if (tourism[i].State) {
-            if (i == start_pos) {
-                this->optimal_time_chart[1][i].total_PS = this->tourism[this->start_pos].PS;
-            } else {
-                this->optimal_time_chart[1][i].total_PS = this->tourism[this->start_pos].PS + this->tourism[i].PS;
-            }
+        if (tourism[i].State && i != start_pos) {
             this->optimal_time_chart[1][i].pre_position = this->start_pos;
             this->optimal_time_chart[1][i].optimal_time = this->time[this->start_pos][i];
-            this->optimal_time_chart[1][i].second_index = i;
+            this->optimal_time_chart[1][i].total_PS = this->tourism[this->start_pos].PS + this->tourism[i].PS;
         } else {
             this->optimal_time_chart[1][i].pre_position = -1;
             this->optimal_time_chart[1][i].optimal_time = 0;
             this->optimal_time_chart[1][i].total_PS = 0;
-            this->optimal_time_chart[1][i].second_index = i;
         }
     }
-    for (int i = 2; i <= this->N; ++i) {
+#ifdef _WYNNE_DEBUG_
+    cout << "INT_MAX:" << INT_MAX << endl;
+    cout << "optimal_time" << endl;
+    cout << "(pre_position, optimal_time, total_PS, second_index)" << endl;
+    cout << "    |";
+    for (int i = 0; i < N; ++i) {
+        cout << setw(13) << i << "|";
+    }
+    cout << endl;
+    for (int i = 0; i < (14 * (N) + 5); ++i) {
+        cout << "-";
+    }
+    cout << endl;
+    for (int i = 0; i < 2; ++i) {
+        cout << setw(4) << i << "|";
+        for (int j = 0; j < N; ++j) {
+            cout << "("
+                 << setw(2) << this->optimal_time_chart[i][j].pre_position << ","
+                 << setw(5) << this->optimal_time_chart[i][j].optimal_time << ","
+                 << setw(2) << this->optimal_time_chart[i][j].total_PS
+                 << ")|";
+        }
+        cout << endl;
+    }
+#endif  // _WYNNE_DEBUG_
+
+    for (int i = 2; i < this->N; ++i) {
         for (int j = 0; j < this->N; ++j) {
-            if (tourism[j].State) {
-                this->optimal_time_chart[i][j].pre_position = this->optimal_time_chart[i - 1][j].pre_position;
-                this->optimal_time_chart[i][j].optimal_time = this->optimal_time_chart[i - 1][j].optimal_time;
-                this->optimal_time_chart[i][j].total_PS = this->optimal_time_chart[i - 1][j].total_PS;
-                this->optimal_time_chart[i][j].second_index = this->optimal_time_chart[i - 1][j].second_index;
+            this->optimal_time_chart[i][j].pre_position = this->optimal_time_chart[i - 1][j].pre_position;
+            this->optimal_time_chart[i][j].optimal_time = this->optimal_time_chart[i - 1][j].optimal_time;
+            this->optimal_time_chart[i][j].total_PS = this->optimal_time_chart[i - 1][j].total_PS;
 
-                if (j != start_pos) {
-                    for (int k = 0; k < this->N; ++k) {
-                        if (k != j && this->tourism[k].State) {
-                            int new_time = this->optimal_time_chart[i - 1][k].optimal_time + this->time[k][j];
-                            int new_PS = this->optimal_time_chart[i - 1][k].total_PS + this->tourism[j].PS;
+            if (tourism[j].State && (j != start_pos)) {
+                for (int k = 0; k < this->N; ++k) {
+                    if ((k != j) && (this->optimal_time_chart[i - 1][k].pre_position != -1)) {
+                        int new_time = this->optimal_time_chart[i - 1][k].optimal_time + this->time[k][j];
+                        int new_PS = this->optimal_time_chart[i - 1][k].total_PS + this->tourism[j].PS;
 
-                            if (new_time < this->optimal_time_chart[i][j].optimal_time) {
+                        if (new_time < this->optimal_time_chart[i][j].optimal_time) {
+                            this->optimal_time_chart[i][j].pre_position = k;
+                            this->optimal_time_chart[i][j].optimal_time = new_time;
+                            this->optimal_time_chart[i][j].total_PS = new_PS;
+                        } else if (new_time == this->optimal_time_chart[i][j].optimal_time) {
+                            if (new_PS > this->optimal_time_chart[i][j].total_PS) {
                                 this->optimal_time_chart[i][j].pre_position = k;
-                                this->optimal_time_chart[i][j].optimal_time = new_time;
-                            } else if (new_time == this->optimal_time_chart[i][j].optimal_time) {
-                                if (new_PS > this->optimal_time_chart[i][j].total_PS) {
+                                this->optimal_time_chart[i][j].total_PS = new_PS;
+                            } else if (new_PS == this->optimal_time_chart[i][j].total_PS && (k != this->optimal_time_chart[i][j].pre_position)) {
+                                stack<int> path_to_k = limited_path_time(k, i);
+                                stack<int> path_to_prej = limited_path_time(this->optimal_time_chart[i][j].pre_position, i);
+                                while (path_to_k.top() == path_to_prej.top()) {
+                                    path_to_k.pop();
+                                    path_to_prej.pop();
+                                }
+                                if (path_to_k.top() < path_to_prej.top()) {
                                     this->optimal_time_chart[i][j].pre_position = k;
                                     this->optimal_time_chart[i][j].total_PS = new_PS;
-                                } else if ((new_PS == this->optimal_time_chart[i][j].total_PS) && (this->optimal_time_chart[i - 1][k].second_index < this->optimal_time_chart[i][j].second_index)) {
-                                    this->optimal_time_chart[i][j].pre_position = k;
-                                    this->optimal_time_chart[i][j].second_index = this->optimal_time_chart[i - 1][k].second_index;
                                 }
                             }
                         }
                     }
                 }
-            } else {
-                optimal_time_chart[i][j].pre_position = -1;
-                optimal_time_chart[i][j].optimal_time = 0;
-                optimal_time_chart[i][j].total_PS = 0;
-                optimal_time_chart[i][j].second_index = j;
             }
         }
+
+#ifdef _WYNNE_DEBUG_
+        cout << setw(4) << i << "|";
+        for (int j = 0; j < N; ++j) {
+            cout << "("
+                 << setw(2) << this->optimal_time_chart[i][j].pre_position << ","
+                 << setw(5) << this->optimal_time_chart[i][j].optimal_time << ","
+                 << setw(2) << this->optimal_time_chart[i][j].total_PS
+                 << ")|";
+        }
+        cout << endl;
+#endif  // _WYNNE_DEBUG_
     }
 }
 
@@ -503,56 +527,52 @@ void Graph_SP::build_optimal_time_chart() {
 // -----------------------------------------------
 void Graph_SP::build_optimal_flow_chart() {
     for (int i = 0; i < this->N; ++i) {
-        if (tourism[i].State) {
-            if (i == start_pos) {
-                this->optimal_flow_chart[1][i].total_PS = this->tourism[this->start_pos].PS;
-            } else {
-                this->optimal_flow_chart[1][i].total_PS = this->tourism[this->start_pos].PS + this->tourism[i].PS;
-            }
+        if (tourism[i].State && i != start_pos) {
             this->optimal_flow_chart[1][i].pre_position = this->start_pos;
             this->optimal_flow_chart[1][i].optimal_flow = this->flow[this->start_pos][i];
-            this->optimal_flow_chart[1][i].second_index = i;
+            this->optimal_flow_chart[1][i].total_PS = this->tourism[this->start_pos].PS + this->tourism[i].PS;
         } else {
             this->optimal_flow_chart[1][i].pre_position = -1;
             this->optimal_flow_chart[1][i].optimal_flow = 0;
             this->optimal_flow_chart[1][i].total_PS = 0;
-            this->optimal_flow_chart[1][i].second_index = i;
         }
     }
-    for (int i = 2; i <= this->N; ++i) {
+    for (int i = 2; i < this->N; ++i) {
         for (int j = 0; j < this->N; ++j) {
-            if (tourism[j].State) {
-                this->optimal_flow_chart[i][j].pre_position = this->optimal_flow_chart[i - 1][j].pre_position;
-                this->optimal_flow_chart[i][j].optimal_flow = this->optimal_flow_chart[i - 1][j].optimal_flow;
-                this->optimal_flow_chart[i][j].total_PS = this->optimal_flow_chart[i - 1][j].total_PS;
-                this->optimal_flow_chart[i][j].second_index = this->optimal_flow_chart[i - 1][j].second_index;
+            this->optimal_flow_chart[i][j].pre_position = this->optimal_flow_chart[i - 1][j].pre_position;
+            this->optimal_flow_chart[i][j].optimal_flow = this->optimal_flow_chart[i - 1][j].optimal_flow;
+            this->optimal_flow_chart[i][j].total_PS = this->optimal_flow_chart[i - 1][j].total_PS;
 
-                if (j != start_pos) {
-                    for (int k = 0; k < this->N; ++k) {
-                        if (k != j && this->tourism[k].State) {
-                            double new_flow = this->optimal_flow_chart[i - 1][k].optimal_flow + this->flow[k][j];
-                            int new_PS = this->optimal_flow_chart[i - 1][k].total_PS + this->tourism[j].PS;
+            for (int k = 0; k < this->N; ++k) {
+                if ((k != j) && (this->optimal_flow_chart[i - 1][k].pre_position != -1)) {
+                    if (k != j && this->tourism[k].State) {
+                        double new_flow = this->optimal_flow_chart[i - 1][k].optimal_flow + this->flow[k][j];
+                        int new_PS = this->optimal_flow_chart[i - 1][k].total_PS + this->tourism[j].PS;
 
-                            if (new_flow > this->optimal_flow_chart[i][j].optimal_flow) {
+                        if (new_flow > this->optimal_flow_chart[i][j].optimal_flow) {
+                            this->optimal_flow_chart[i][j].pre_position = k;
+                            this->optimal_flow_chart[i][j].optimal_flow = new_flow;
+                            this->optimal_flow_chart[i][j].total_PS = new_PS;
+                        } else if (new_flow == this->optimal_flow_chart[i][j].optimal_flow) {
+                            if (new_PS > this->optimal_flow_chart[i][j].total_PS) {
                                 this->optimal_flow_chart[i][j].pre_position = k;
-                                this->optimal_flow_chart[i][j].optimal_flow = new_flow;
-                            } else if (new_flow == this->optimal_flow_chart[i][j].optimal_flow) {
-                                if (new_PS > this->optimal_flow_chart[i][j].total_PS) {
+                                this->optimal_flow_chart[i][j].total_PS = new_PS;
+                            } else if (new_PS == this->optimal_flow_chart[i][j].total_PS && (k != this->optimal_flow_chart[i][j].pre_position)) {
+                                stack<int> path_to_k = limited_path_flow(k, i);
+                                stack<int> path_to_prej = limited_path_flow(this->optimal_flow_chart[i][j].pre_position, i);
+
+                                while (path_to_k.top() == path_to_prej.top()) {
+                                    path_to_k.pop();
+                                    path_to_prej.pop();
+                                }
+                                if (path_to_k.top() < path_to_prej.top()) {
                                     this->optimal_flow_chart[i][j].pre_position = k;
                                     this->optimal_flow_chart[i][j].total_PS = new_PS;
-                                } else if ((new_PS == this->optimal_flow_chart[i][j].total_PS) && (this->optimal_flow_chart[i - 1][k].second_index < this->optimal_flow_chart[i][j].second_index)) {
-                                    this->optimal_flow_chart[i][j].pre_position = k;
-                                    this->optimal_flow_chart[i][j].second_index = this->optimal_flow_chart[i - 1][k].second_index;
                                 }
                             }
                         }
                     }
                 }
-            } else {
-                optimal_flow_chart[i][j].pre_position = -1;
-                optimal_flow_chart[i][j].optimal_flow = 0;
-                optimal_flow_chart[i][j].total_PS = 0;
-                optimal_flow_chart[i][j].second_index = j;
             }
         }
     }
@@ -568,7 +588,7 @@ bool Graph_SP::mark_state(string place_name, bool status) {
     for (int i = 0; i < this->N; i++) {
         if (place_name == this->tourism[i].Name) {
             if (i == this->start_pos) {
-                return true;
+                return false;
             } else if (this->tourism[i].State != status) {
                 this->tourism[i].State = status;
                 return true;
@@ -599,89 +619,65 @@ void Graph_SP::update_chart() {
 }
 
 // -----------------------------------------------
-// Graph_SP::optimal_path
+// Graph_SP::limited_path
 // -----------------------------------------------
 // Description:
-//     Return optimal path
+//     Return limited path by pos
 // -----------------------------------------------
-stack<string> Graph_SP::optimal_path_time(string place_name) {
-    stack<string> final_path;
-    for (int i = 0; i < this->N; i++) {
-        // find the destination and check if it is open.
-        if (place_name == tourism[i].Name && tourism[i].State == 1) {
-            int pos = i;
-            int times = N;
-            while (times > 1) {
-                if (optimal_time_chart[times][pos].pre_position == optimal_time_chart[times - 1][pos].pre_position) {
-                    times--;
-                } else {
-                    break;
-                }
-            }
-            while (times > 0) {
-                final_path.push(tourism[pos].Name);
-                pos = optimal_time_chart[times][pos].pre_position;
-                times--;
-            }
-            final_path.push(tourism[start_pos].Name);
-            return final_path;
-        }
+stack<int> Graph_SP::limited_path_time(int pos, int limit) {
+    stack<int> final_path;
+    int times = limit - 1;
+
+    while (this->optimal_time_chart[times][pos].pre_position != -1) {
+        final_path.push(pos);
+        pos = this->optimal_time_chart[times][pos].pre_position;
+        times--;
     }
+
+    final_path.push(start_pos);
     return final_path;
 }
 
-stack<string> Graph_SP::optimal_path_flow(string place_name) {
-    stack<string> final_path;
-    for (int i = 0; i < this->N; i++) {
-        if (place_name == tourism[i].Name && tourism[i].State == 1) {
-            int pos = i;
-            int times = N;
-            while (times > 1) {
-                if (optimal_flow_chart[times][pos].pre_position == optimal_flow_chart[times - 1][pos].pre_position) {
-                    times--;
-                } else {
-                    break;
-                }
-            }
+stack<int> Graph_SP::limited_path_flow(int pos, int limit) {
+    stack<int> final_path;
+    int times = limit - 1;
 
-            while (times > 0) {
-                final_path.push(tourism[pos].Name);
-                pos = optimal_flow_chart[times][pos].pre_position;
-                times--;
-            }
-            final_path.push(tourism[start_pos].Name);
-            return final_path;
-        }
+    while (this->optimal_flow_chart[times][pos].pre_position != -1) {
+        final_path.push(pos);
+        pos = this->optimal_flow_chart[times][pos].pre_position;
+        times--;
     }
+
+    final_path.push(start_pos);
     return final_path;
 }
-
 // -----------------------------------------------
 // Graph_SP::limited_path
 // -----------------------------------------------
 // Description:
-//     Return limited path
+//     Return limited path by place name
 // -----------------------------------------------
 stack<string> Graph_SP::limited_path_time(string place_name, int limit) {
     stack<string> final_path;
     for (int i = 0; i < this->N; i++) {
-        if (place_name == tourism[i].Name && tourism[i].State == 1) {
-            int pos = i;
+        if (place_name == this->tourism[i].Name) {
             int times = limit - 1;
-            while (times > 1) {
-                if (optimal_time_chart[times][pos].pre_position == optimal_time_chart[times - 1][pos].pre_position) {
+            int pos = i;
+            if (times >= N) {
+                times = N - 1;
+            }
+            if (this->optimal_time_chart[times][pos].pre_position != -1) {
+                while (this->optimal_time_chart[times][pos].pre_position != -1) {
+                    final_path.push(this->tourism[pos].Name);
+                    pos = this->optimal_time_chart[times][pos].pre_position;
                     times--;
-                } else {
-                    break;
                 }
+
+                final_path.push(this->tourism[start_pos].Name);
+                return final_path;
+            } else {
+                return final_path;
             }
-            while (times > 0) {
-                final_path.push(tourism[pos].Name);
-                pos = optimal_time_chart[times][pos].pre_position;
-                times--;
-            }
-            final_path.push(tourism[start_pos].Name);
-            return final_path;
         }
     }
     return final_path;
@@ -689,24 +685,24 @@ stack<string> Graph_SP::limited_path_time(string place_name, int limit) {
 stack<string> Graph_SP::limited_path_flow(string place_name, int limit) {
     stack<string> final_path;
     for (int i = 0; i < this->N; i++) {
-        if (place_name == tourism[i].Name && tourism[i].State == 1) {
-            int pos = i;
+        if (place_name == this->tourism[i].Name) {
             int times = limit - 1;
-            while (times > 1) {
-                if (optimal_flow_chart[times][pos].pre_position == optimal_flow_chart[times - 1][pos].pre_position) {
+            int pos = i;
+            if (times >= N) {
+                times = N - 1;
+            }
+            if (this->optimal_flow_chart[times][pos].pre_position != -1) {
+                while (this->optimal_flow_chart[times][pos].pre_position != -1) {
+                    final_path.push(this->tourism[pos].Name);
+                    pos = this->optimal_flow_chart[times][pos].pre_position;
                     times--;
-                } else {
-                    break;
                 }
-            }
 
-            while (times > 0) {
-                final_path.push(tourism[pos].Name);
-                pos = optimal_flow_chart[times][pos].pre_position;
-                times--;
+                final_path.push(this->tourism[start_pos].Name);
+                return final_path;
+            } else {
+                return final_path;
             }
-            final_path.push(tourism[start_pos].Name);
-            return final_path;
         }
     }
     return final_path;
