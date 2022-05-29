@@ -28,10 +28,10 @@ void mySort(T arr[], int l, int r){
             while( left < r && arr[++left] < pivot);
             while( right > 0 && arr[--right] > pivot);
 
-            if( l == r){
+            if( left >= right ){
                 break;
             }
-            swap(arr[left], arr[right]);
+            swap(arr[left], arr[r]);
             mySort(arr , l, right - 1);
             mySort(arr, right + 1, r);
         }
